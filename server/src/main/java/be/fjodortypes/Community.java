@@ -42,8 +42,15 @@ public final class Community {
         this.background = background;
     }
 
+    private Broadcast broadcast;
+
+    /** The nightly broadcast, for /broadcast. */
+    public void setBroadcast(Broadcast broadcast) {
+        this.broadcast = broadcast;
+    }
+
     public static boolean handles(long type, Map<?, ?> data, String customId) {
-        return type == 2 && "setup".equals(data.get("name"))
+        return type == 2 && ("setup".equals(data.get("name")) || "broadcast".equals(data.get("name")))
                 || customId.equals("verify") || customId.startsWith("desk:");
     }
 
@@ -65,8 +72,14 @@ public final class Community {
                             option(8, "night_desk_role", "Reads and answers the letters.", true, null),
                             option(8, "visitor_role", "Given when someone joins, taken away once they've read the rules.", false, null),
                             option(7, "review_channel", "Where new drop submissions are posted for review.", false, List.of(0)),
+                            option(7, "broadcast_channel", "Where a monologue is typed live every night at 3:00.", false, List.of(0)),
                             option(5, "fix_permissions", "Set the permissions on these channels for you. Default: yes.", false, null),
-                            option(5, "hide_other_channels", "Hide every other channel until people have read the rules. Default: no.", false, null)))));
+                            option(5, "hide_other_channels", "Hide every other channel until people have read the rules. Default: no.", false, null))),
+                    Json.obj(
+                            "name", "broadcast",
+                            "description", "Type a monologue in the broadcast channel right now, like at 3:00",
+                            "default_member_permissions", "32",
+                            "contexts", List.of(0))));
             System.out.println("Registered /setup");
         } catch (IOException e) {
             System.err.println("Couldn't register /setup: " + e.getMessage());
@@ -93,7 +106,7 @@ public final class Community {
         String guild = String.valueOf(in.get("guild_id"));
         String rules = str(opts, "rules"), desk = str(opts, "night_desk"), member = str(opts, "member_role"),
                 nightDesk = str(opts, "night_desk_role"), visitor = str(opts, "visitor_role"),
-                review = str(opts, "review_channel");
+                review = str(opts, "review_channel"), broadcastChannel = str(opts, "broadcast_channel");
         boolean fix = !Boolean.FALSE.equals(opts.get("fix_permissions"));
         boolean hideOthers = Boolean.TRUE.equals(opts.get("hide_other_channels"));
 
@@ -112,7 +125,8 @@ public final class Community {
             try {
                 for (String[] kv : new String[][]{{Doors.RULES_CHANNEL, rules}, {Doors.DESK_CHANNEL, desk},
                         {Doors.MEMBER_ROLE, member}, {Doors.NIGHT_DESK_ROLE, nightDesk},
-                        {Doors.VISITOR_ROLE, visitor}, {Doors.REVIEW_CHANNEL, review}}) {
+                        {Doors.VISITOR_ROLE, visitor}, {Doors.REVIEW_CHANNEL, review},
+                        {Doors.BROADCAST_CHANNEL, broadcastChannel}}) {
                     if (doors.fixedInConfig(kv[0])) {
                         warnings.add("`" + kv[0] + "` is set in config.properties, so that value is used instead.");
                     }
@@ -124,6 +138,10 @@ public final class Community {
                 checkRoles(guild, botId, member, visitor, warnings);
                 if (fix) {
                     fixPermissions(guild, botId, rules, desk, review, member, nightDesk, done, warnings);
+                    if (!broadcastChannel.isEmpty()
+                            && overwrite(broadcastChannel, botId, 1, VIEW | SEND | HISTORY, 0, warnings)) {
+                        done.add("<#" + broadcastChannel + ">: a monologue is typed here every night at 3:00.");
+                    }
                 }
                 if (hideOthers) {
                     hideOtherChannels(guild, member, nightDesk, List.of(rules, desk, review), done, warnings);
@@ -290,6 +308,14 @@ public final class Community {
     // ------------------------------------------------------------------ buttons and forms
 
     public String handle(Map<String, Object> in, long type, Map<?, ?> data, String customId) {
+        if (type == 2 && "broadcast".equals(data.get("name"))) {
+            if (broadcast == null || doors.broadcastChannel().isEmpty()) {
+                return Interactions.whisper("Choose a broadcast channel with /setup first.");
+            }
+            return Interactions.whisper(broadcast.now()
+                    ? "The voice is starting in <#" + doors.broadcastChannel() + ">."
+                    : "It's already typing.");
+        }
         if (type == 2) {
             return setup(in, data);
         }

@@ -137,6 +137,7 @@ roles *Those Who Stayed*, *The Night Desk*, optionally *Visitor*). Then, in Disc
 | `night_desk_role` | Sees every letter and can close them. Also sees the review channel. |
 | `visitor_role` *(optional)* | Given the moment someone joins, taken away when they verify. |
 | `review_channel` *(optional)* | Where new drop submissions are posted with Approve / Edit / Reject. |
+| `broadcast_channel` *(optional)* | Every night at 3:00 a monologue is typed here, live. |
 | `fix_permissions` *(default yes)* | Sets the permissions on these channels for you (see below). |
 | `hide_other_channels` *(default no)* | Every other channel `@everyone` can see now becomes visible only to the member role and the Night Desk. |
 
@@ -156,6 +157,16 @@ Roles). Discord only lets a bot hand out roles below its own. `/setup` warns you
 
 **The visitor role** needs the always-on connection (`discord.gateway=on`, the default) and the Server
 Members Intent. Without a visitor role, `@everyone` is simply the "unverified" state.
+
+### The 3 a.m. broadcast
+
+Every night at **3:00** (Brussels time) the bot types one monologue, live, in the `broadcast_channel` from
+`/setup`: one line at a time, with the typing indicator, and a pause at every `~`. It uses the same texts as the
+site (`monologues.js` plus approved drops), skips hidden ones and ones meant for other hours, and doesn't repeat
+any of the last 10. A small line at the end says when it was typed.
+
+- `/broadcast` (Manage Server) starts one right away, to try it out.
+- Change the time or zone with `broadcast.time` and `broadcast.timezone` in `config.properties`.
 
 ### 6. Updating
 

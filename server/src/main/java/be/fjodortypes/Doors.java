@@ -15,6 +15,7 @@ import java.util.Map;
 public final class Doors {
     public static final String MEMBER_ROLE = "memberRole", VISITOR_ROLE = "visitorRole", NIGHT_DESK_ROLE = "nightDeskRole",
             RULES_CHANNEL = "rulesChannel", DESK_CHANNEL = "deskChannel", REVIEW_CHANNEL = "reviewChannel",
+            BROADCAST_CHANNEL = "broadcastChannel", BROADCAST_RECENT = "broadcastRecent",
             RULES_PANEL = "rulesPanel", DESK_PANEL = "deskPanel";
 
     private final Path file;
@@ -29,6 +30,7 @@ public final class Doors {
         put(fixed, RULES_CHANNEL, config.rulesChannelId());
         put(fixed, DESK_CHANNEL, config.deskChannelId());
         put(fixed, REVIEW_CHANNEL, config.reviewChannelId());
+        put(fixed, BROADCAST_CHANNEL, config.broadcastChannelId());
         if (Files.exists(file)) {
             Json.parseObject(Files.readString(file, StandardCharsets.UTF_8))
                     .forEach((k, v) -> put(saved, k, String.valueOf(v)));
@@ -76,6 +78,10 @@ public final class Doors {
 
     public String reviewChannel() {
         return get(REVIEW_CHANNEL);
+    }
+
+    public String broadcastChannel() {
+        return get(BROADCAST_CHANNEL);
     }
 
     private static void put(Map<String, String> m, String k, String v) {
