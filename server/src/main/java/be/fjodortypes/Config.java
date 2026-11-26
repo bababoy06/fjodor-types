@@ -36,7 +36,7 @@ public record Config(String bind, int port, String siteHost, String dropHost, Pa
                 p.load(r);
             }
         }
-        String port = get(p, "web.port", "8800");
+        String port = get(p, "web.port", "8810");
         if (!port.matches("\\d{1,5}")) {
             throw new IllegalStateException("web.port must be a number, got: " + port);
         }

@@ -1,6 +1,6 @@
 #!/bin/bash
 # First install of fjodor-types on the VPS, the same way as Pearl'It All:
-#   /opt/fjodor (user fjodor), checkout in /opt/fjodor/src, fjodor.service on 127.0.0.1:8800, nginx in front.
+#   /opt/fjodor (user fjodor), checkout in /opt/fjodor/src, fjodor.service on 127.0.0.1:8810, nginx in front.
 # Run it once from anywhere:  bash setup.sh   (download it from the repo, or paste it into a file)
 set -euo pipefail
 APP=/opt/fjodor
@@ -11,8 +11,8 @@ if [ -d "$APP/src/.git" ]; then
     echo "Already installed: $APP/src exists. Use ~/update-fjodor.sh from now on."
     exit 0
 fi
-if ss -ltn | grep -q ':8800 '; then
-    echo "Something already listens on port 8800. Pick another web.port and change it in the nginx file too."
+if ss -ltn | grep -q ':8810 '; then
+    echo "Something already listens on port 8810. Pick another web.port and change it in the nginx file too."
     exit 1
 fi
 
@@ -57,7 +57,7 @@ if systemctl is-active --quiet fjodor; then
     sudo cat "$APP/src/deploy/update-fjodor.sh" > ~/update-fjodor.sh
     chmod +x ~/update-fjodor.sh
     echo
-    echo "Done. fjodor-types runs from $APP as fjodor.service on 127.0.0.1:8800."
+    echo "Done. fjodor-types runs from $APP as fjodor.service on 127.0.0.1:8810."
     echo "Next: the nginx file and certbot (README, 'Running it on the VPS'),"
     echo "then fill in the Discord settings:  sudo nano $APP/config.properties  &&  sudo systemctl restart fjodor"
     echo "Update from now on with:  ~/update-fjodor.sh"

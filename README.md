@@ -52,7 +52,7 @@ optional signature, and who decided.
 
 ## Running it on the VPS
 
-It runs like Pearl'It All: its own `fjodor` user in `/opt/fjodor`, `fjodor.service` on `127.0.0.1:8800`, nginx
+It runs like Pearl'It All: its own `fjodor` user in `/opt/fjodor`, `fjodor.service` on `127.0.0.1:8810`, nginx
 with HTTPS in front, a read-only deploy key for pulling. The Java service serves both addresses; there's no
 `/var/www`. No libraries: the build needs nothing but Java 21.
 
@@ -81,7 +81,7 @@ server {
     client_max_body_size 64k;
 
     location / {
-        proxy_pass http://127.0.0.1:8800;
+        proxy_pass http://127.0.0.1:8810;
         proxy_set_header Host $host;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
