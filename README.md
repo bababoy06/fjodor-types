@@ -106,15 +106,52 @@ sudo certbot --nginx -d fjodor-types.com -d www.fjodor-types.com -d drop.fjodor-
    (e.g. *The Archivist*).
 2. **General Information:** copy the **Public Key** (= `discord.public-key`).
 3. **Bot:** **Reset Token** and copy it (= `discord.bot-token`). No privileged intents needed.
-4. **Invite it** to your server: OAuth2 → URL Generator, scopes `bot`, permissions **View Channels**,
-   **Send Messages** and **Embed Links**. Open the link.
+4. **Invite it** to your server: OAuth2 → URL Generator, scope `bot`, permissions **Manage Roles**,
+   **View Channels**, **Send Messages**, **Embed Links**, **Create Private Threads**, **Send Messages in Threads**
+   and **Manage Threads**. Open the link.
 5. Make a private review channel, copy its ID (= `discord.review-channel-id`), and your own user ID
    (= `discord.reviewer-ids`).
 6. Fill them in: `sudo nano /opt/fjodor/config.properties`, then `sudo systemctl restart fjodor`.
 7. Back in **General Information**, set the **Interactions Endpoint URL** to
    `https://drop.fjodor-types.com/discord/interactions` (Discord checks it right away, so the site has to be running).
 
-### 5. Updating
+### 5. The community server: rules check and the Night Desk
+
+The same bot also runs two doors on your Discord server, only with buttons, so it never needs to stay connected:
+
+- **The rules check.** `@everyone` can only see `#rules`. Under the rules is an **I've read the rules** button that
+  gives the member role (*Those Who Stayed*), which opens every public channel. Optionally it also takes away a
+  visitor role, if you give new members one.
+- **The Night Desk.** In `#the-night-desk` a **Write to the Night Desk** button opens a small form (subject and
+  letter). Each letter becomes a **private thread** in that channel: only the writer and *The Night Desk* role can
+  see it. One open letter per person. The writer or the Night Desk closes it with **Close this letter**, which
+  archives and locks the thread.
+
+**Roles** (Server Settings → Roles). Keep the bot's own role **above** *Those Who Stayed* and the visitor role, or
+it can't hand them out.
+
+| Role | Permissions |
+|---|---|
+| `@everyone` | View Channels **off** everywhere except `#rules` (read only) |
+| Those Who Stayed | View Channels on the public channels and `#the-night-desk` |
+| The Night Desk | Manage Threads in `#the-night-desk` (to see and close every letter); mark it **mentionable**, so it's pulled into new letters |
+| the bot | Manage Roles; in `#rules` and `#the-night-desk`: View Channel, Send Messages, Embed Links, Create Private Threads, Send Messages in Threads, Manage Threads |
+
+**`#the-night-desk` for Those Who Stayed:** View Channel and Read Message History **on**, Send Messages **off**,
+Create Public Threads and Create Private Threads **off**, Send Messages in Threads **on**. They can then only
+write inside their own letter.
+
+**Turning it on:**
+
+1. Copy the role and channel IDs into the `discord.*` settings in `/opt/fjodor/config.properties`
+   (see `config.example.properties`) and `sudo systemctl restart fjodor`.
+2. Post the two buttons, once:
+   ```bash
+   sudo -u fjodor java -jar /opt/fjodor/fjodor.jar panels /opt/fjodor/config.properties
+   ```
+   Write the rules themselves above the button in `#rules` before you do.
+
+### 6. Updating
 
 ```bash
 ~/update-fjodor.sh
@@ -123,7 +160,7 @@ sudo certbot --nginx -d fjodor-types.com -d www.fjodor-types.com -d drop.fjodor-
 Pulls as the `fjodor` user, then builds and restarts. Changes to the texts (`index.html`, `monologues.js`,
 `drop/index.html`) are live right after the pull, since they're read from the checkout on every request.
 
-### 6. Backups
+### 7. Backups
 
 Everything visitors sent is in `/opt/fjodor/submissions.json`. Add it to the nightly backup:
 
