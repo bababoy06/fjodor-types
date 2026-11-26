@@ -138,6 +138,7 @@ roles *Those Who Stayed*, *The Night Desk*, optionally *Visitor*). Then, in Disc
 | `visitor_role` *(optional)* | Given the moment someone joins, taken away when they verify. |
 | `review_channel` *(optional)* | Where new drop submissions are posted with Approve / Edit / Reject. |
 | `broadcast_channel` *(optional)* | Every night at 3:00 a monologue is typed here, live. |
+| `archive_channel` *(optional)* | The door to the archive (see below). |
 | `fix_permissions` *(default yes)* | Sets the permissions on these channels for you (see below). |
 | `hide_other_channels` *(default no)* | Every other channel `@everyone` can see now becomes visible only to the member role and the Night Desk. |
 
@@ -168,6 +169,25 @@ any of the last 10. A small line at the end says when it was typed.
 - `/broadcast` (Manage Server) starts one right away, to try it out.
 - Change the time or zone with `broadcast.time` and `broadcast.timezone` in `config.properties`.
 
+### The archive
+
+In `archive_channel` there's a single door with **Enter the archive**. Everything inside is visible only to the
+person walking through it, so everyone is alone in the hall. *"There are 2 others in the hall. You won't see them."*
+
+- **Three aisles.** *The Aisle of Voices* holds the monologues (`V-001`…). *The Aisle of Letters* holds the
+  approved drops (`L-001`…). *The Visitors' Ledger* holds the weekly entries (`W48·3`…). Pulling a card reveals it
+  paragraph by paragraph.
+- **Underline a line.** Anonymous. Underlined lines show how many people did: `__a line__ ²`.
+- **Notes in the margin.** Up to 200 characters, signed or not, 10 a day per person. They appear right away. A
+  **Report** menu sends a note to the review channel with **Remove it** / **Keep it**.
+- **File an entry.** One per person per week (Monday to Sunday, Brussels time), signed or not. It goes to the
+  review channel with **File it** / **Put it away**, and gets a ledger number when filed. A rejected entry doesn't
+  use up the week.
+- **Search the catalogue.** Finds every card that mentions a word, or answers in its own voice when nothing does.
+
+Reviewing is open to `discord.reviewer-ids` and the Night Desk role. Readers only see names on signed entries
+and notes; the review messages always show who wrote it. Everything is kept in `/opt/fjodor/archive.json`.
+
 ### 6. Updating
 
 ```bash
@@ -179,10 +199,11 @@ Pulls as the `fjodor` user, then builds and restarts. Changes to the texts (`ind
 
 ### 7. Backups
 
-Everything visitors sent is in `/opt/fjodor/submissions.json`, and your `/setup` choices in
-`/opt/fjodor/discord.json`. Add them to the nightly backup:
+Everything visitors sent is in `/opt/fjodor/submissions.json`, your `/setup` choices in
+`/opt/fjodor/discord.json`, and the archive (entries, notes, underlines) in `/opt/fjodor/archive.json`. Add them to the nightly backup:
 
 ```bash
 sudo cp /opt/fjodor/submissions.json /home/<you>/backups/fjodor-submissions-$(date +%F).json
 sudo cp /opt/fjodor/discord.json /home/<you>/backups/fjodor-discord-$(date +%F).json
+sudo cp /opt/fjodor/archive.json /home/<you>/backups/fjodor-archive-$(date +%F).json
 ```
