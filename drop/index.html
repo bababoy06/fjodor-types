@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Leave something</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital@0;1&display=swap" rel="stylesheet">
+<style>
+/* VOICE: the same voice as the main page, but now it's the visitor's turn — quiet, a little ceremonial.
+   IDEA: a slot in the archive door where you push a letter through.
+   PICTURE: the writing surface itself: one large dark sheet with a blinking cursor in it.
+   COLOUR and TYPE: the main page's night palette in both themes; Courier Prime.
+   LAYOUT: one narrow column; title typed, then the sheet, then a quiet row of controls. */
+:root{color-scheme:dark;--bg:#111112;--sheet:#18181a;--line:#2a2a2d;--ink:#cfccc6;--quote:#e9e4d8;--dim:#7d7a75;--faint:#4e4c49}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 "Courier Prime","Courier New",monospace;overflow-x:clip}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 30%,rgba(255,250,240,.04),transparent 60%),radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.55))}
+main{position:relative;max-width:640px;margin:0 auto;padding:clamp(40px,9vh,96px) max(5vw,18px) 64px}
+h1{font-weight:400;font-size:clamp(24px,5vw,32px);line-height:1.2;margin:0 0 .6em;min-height:1.2em}
+.cur{display:inline-block;width:.55em;height:1em;vertical-align:-.12em;background:var(--ink);animation:blink 1.05s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+p.note{color:var(--dim);margin:0 0 1.6em;max-width:56ch}
+label{display:block;color:var(--dim);font-size:14px;margin:0 0 6px}
+textarea,input[type=text]{width:100%;font:inherit;color:var(--ink);background:var(--sheet);border:1px solid var(--line);border-radius:3px;padding:16px;caret-color:var(--ink)}
+textarea{min-height:44vh;resize:vertical;line-height:1.65}
+input[type=text]{padding:12px 14px;font-size:16px}
+textarea:focus,input:focus,button:focus-visible{outline:1px solid var(--dim);outline-offset:2px}
+::placeholder{color:var(--faint)}
+.meta{display:flex;justify-content:space-between;gap:12px;font-size:13px;color:var(--faint);margin:6px 2px 22px}
+.meta .over{color:#b0716a}
+.row{margin-bottom:22px}
+.check{display:flex;gap:10px;align-items:flex-start;color:var(--ink);font-size:15px;cursor:pointer}
+.check input{width:20px;height:20px;margin:2px 0 0;accent-color:#8b8780;flex:none}
+.trap{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.buttons{display:flex;flex-wrap:wrap;gap:12px;margin-top:26px}
+button{font:inherit;font-size:16px;min-height:44px;padding:0 20px;border-radius:3px;cursor:pointer;border:1px solid var(--line);background:transparent;color:var(--ink)}
+button.main{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+button:disabled{opacity:.45;cursor:default}
+#msg{min-height:1.6em;margin-top:18px;color:#c99a92}
+#preview{margin-top:34px;border-top:1px solid var(--line);padding-top:26px;display:none}
+#preview h2{font-size:14px;font-weight:400;color:var(--dim);margin:0 0 18px}
+#preview p{margin:0 0 .9em;white-space:pre-wrap;overflow-wrap:anywhere}
+#preview p.q{font-style:italic;color:var(--quote);padding-left:1.4ch}
+#preview .gap{color:var(--faint);letter-spacing:.5em;margin:.2em 0 1.1em}
+#preview .p{color:var(--faint)}
+#done{display:none;font-size:clamp(18px,4.4vw,22px)}
+#done p{margin:0 0 1em;white-space:pre-wrap}
+details{margin-top:40px;color:var(--dim);font-size:14px}
+summary{cursor:pointer;min-height:44px;display:flex;align-items:center}
+details code{color:var(--ink)}
+details ul{padding-left:1.2em;margin:.4em 0 0}
+@media (prefers-reduced-motion:reduce){.cur{animation:none}}
+</style>
+</head>
+<body>
+<main>
+  <h1 id="title" aria-label="Leave something for the archive."></h1>
+  <p class="note">Write something for the voice to say. Someone reads everything before it goes in. If it's kept, it will be typed out one day, to a stranger who can't answer.</p>
+
+  <form id="form" novalidate>
+    <div class="row">
+      <label for="text">Your monologue</label>
+      <textarea id="text" maxlength="3200" placeholder="You're still here. I thought you'd leave…" required></textarea>
+      <div class="meta"><span>Blank lines become long pauses.</span><span id="count">0 / 3000</span></div>
+    </div>
+    <div class="row">
+      <label for="signature">Sign it, if you like (only the archivist sees this)</label>
+      <input type="text" id="signature" maxlength="60" autocomplete="off">
+    </div>
+    <div class="trap" aria-hidden="true"><label for="website">Leave this empty</label><input type="text" id="website" tabindex="-1" autocomplete="off"></div>
+    <label class="check"><input type="checkbox" id="own"> I wrote this myself. It isn't from a book, a song, a game or a film.</label>
+    <div class="buttons">
+      <button type="button" id="previewBtn">See the pauses</button>
+      <button type="submit" class="main" id="send">Leave it</button>
+    </div>
+    <div id="msg" role="status"></div>
+  </form>
+
+  <section id="preview" aria-live="polite">
+    <h2>How it will be typed</h2>
+    <div id="lines"></div>
+  </section>
+
+  <section id="done" aria-live="polite"></section>
+
+  <details>
+    <summary>Writing tips</summary>
+    <ul>
+      <li>Write to <em>you</em>, the person reading. The voice talks to one stranger at a time.</li>
+      <li>Each sentence is typed as its own line. Short lines you break yourself stay as they are.</li>
+      <li>A blank line between paragraphs becomes a long silence. <code>...</code> becomes a hesitation.</li>
+      <li>Your own pause: <code>[p:1500]</code> waits 1.5 seconds. A line starting with <code>&gt; </code> is set in italics.</li>
+      <li><code>{clock}</code> and <code>{weekday}</code> become the reader's time and day.</li>
+    </ul>
+  </details>
+</main>
+<script>
+{
+const $=id=>document.getElementById(id);
+const opened=Date.now();
+const text=$('text'),count=$('count'),msg=$('msg');
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+/* the title types itself, like the main page */
+(async()=>{
+  const h=$('title'),cur=document.createElement('span'),t=document.createTextNode('');
+  cur.className='cur';h.append(t,cur);
+  if(matchMedia('(prefers-reduced-motion:reduce)').matches){t.data=h.getAttribute('aria-label');return}
+  await sleep(700);
+  for(const c of h.getAttribute('aria-label')){t.data+=c;await sleep(c==='.'?400:45+Math.random()*50)}
+})();
+
+/* a draft survives a reload */
+try{text.value=localStorage.getItem('drop.draft')||''}catch(e){}
+const update=()=>{
+  const n=text.value.trim().length;
+  count.textContent=n+' / 3000';count.className=n>3000?'over':'';
+  try{localStorage.setItem('drop.draft',text.value)}catch(e){}
+};
+text.addEventListener('input',update);update();
+
+async function post(path,body){
+  const r=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  let data={};try{data=await r.json()}catch(e){}
+  if(!r.ok)throw new Error(data.error||'Something went wrong. Try again in a moment.');
+  return data;
+}
+
+function render(script){
+  const box=$('lines');box.replaceChildren();
+  for(const line of script.split('\n')){
+    if(line==='~'||line==='---'){const g=document.createElement('div');g.className='gap';g.textContent=line==='~'?'· · ·':'— — —';box.append(g);continue}
+    const p=document.createElement('p');
+    let l=line;if(l.startsWith('> ')){p.className='q';l=l.slice(2)}
+    for(const part of l.split(/(\[(?:p|del):\d+\])/)){
+      if(/^\[(p|del):\d+\]$/.test(part)){const s=document.createElement('span');s.className='p';s.textContent=part.startsWith('[p')?' ‥ ':' ⌫ ';s.title=part;p.append(s)}
+      else p.append(document.createTextNode(part));
+    }
+    box.append(p);
+  }
+  $('preview').style.display='block';
+}
+
+$('previewBtn').addEventListener('click',async()=>{
+  msg.textContent='';
+  if(!text.value.trim()){msg.textContent='Write something first.';text.focus();return}
+  try{render((await post('/api/preview',{text:text.value})).script);$('preview').scrollIntoView({behavior:'smooth',block:'start'})}
+  catch(e){msg.textContent=e.message}
+});
+
+$('form').addEventListener('submit',async e=>{
+  e.preventDefault();msg.textContent='';
+  const n=text.value.trim().length;
+  if(n<80){msg.textContent="That's a little short. Give it at least 80 characters.";text.focus();return}
+  if(n>3000){msg.textContent="That's too long for one sitting. Keep it under 3000 characters.";text.focus();return}
+  if(!$('own').checked){msg.textContent='Only send something you wrote yourself.';$('own').focus();return}
+  const btn=$('send');btn.disabled=true;btn.textContent='Leaving it…';
+  try{
+    await post('/api/submit',{text:text.value,signature:$('signature').value,own:true,website:$('website').value,opened});
+    try{localStorage.removeItem('drop.draft')}catch(e){}
+    $('form').style.display='none';$('preview').style.display='none';document.querySelector('.note').style.display='none';
+    const done=$('done');done.style.display='block';
+    const cur=document.createElement('span');cur.className='cur';
+    for(const line of ["It's in the archive now.","Someone will read it. Maybe tonight.","If it's kept, you won't be told. You'll just hear it one day, typed back to you, and you'll know."]){
+      const p=document.createElement('p'),t=document.createTextNode('');p.append(t,cur);done.append(p);
+      for(const c of line){t.data+=c;await sleep(c==='.'?380:40+Math.random()*45)}
+      await sleep(700);
+    }
+  }catch(err){msg.textContent=err.message;btn.disabled=false;btn.textContent='Leave it'}
+});
+}
+</script>
+</body>
+</html>

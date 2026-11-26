@@ -1,0 +1,20 @@
+plugins {
+    id 'java'
+}
+
+group = 'be.fjodortypes'
+version = '0.1.0'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+// No libraries at all: the JDK's own HTTP server, HTTP client and Ed25519 are enough.
+jar {
+    archiveFileName = 'fjodor.jar'
+    manifest {
+        attributes 'Main-Class': 'be.fjodortypes.Main'
+    }
+}
