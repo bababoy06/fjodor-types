@@ -19,10 +19,21 @@ import java.util.stream.Collectors;
  * @param dropHost        the submission page's host, e.g. drop.fjodor-types.com
  * @param siteDir         the repo checkout: index.html, monologues.js and drop/index.html are read from here
  * @param dataFile        where submissions are kept (a JSON file)
- * @param reviewerIds     Discord users allowed to press the buttons (empty = anyone in the review channel)
+ * @param reviewerIds     Discord users allowed to press the review buttons (empty = anyone in the review channel)
+ * @param memberRoleId    given by the rules button (e.g. Those Who Stayed); opens the public channels
+ * @param visitorRoleId   optional: taken away by the rules button, if new members get one
+ * @param nightDeskRoleId sees and answers the tickets
+ * @param deskChannelId   the Night Desk channel; tickets are private threads inside it
  */
 public record Config(String bind, int port, String siteHost, String dropHost, Path siteDir, Path dataFile,
-                     String botToken, String publicKey, String reviewChannelId, Set<String> reviewerIds) {
+                     String botToken, String publicKey, String reviewChannelId, Set<String> reviewerIds,
+                     String memberRoleId, String visitorRoleId, String nightDeskRoleId,
+                     String rulesChannelId, String deskChannelId) {
+
+    /** The bot answers buttons once it has a token and the public key. */
+    public boolean botEnabled() {
+        return !botToken.isBlank() && !publicKey.isBlank();
+    }
 
     /** Review in Discord runs when the token, the public key and the channel are all filled in. */
     public boolean reviewEnabled() {
@@ -51,7 +62,12 @@ public record Config(String bind, int port, String siteHost, String dropHost, Pa
                 get(p, "discord.public-key", ""),
                 get(p, "discord.review-channel-id", ""),
                 Arrays.stream(get(p, "discord.reviewer-ids", "").split(","))
-                        .map(String::trim).filter(s -> !s.isEmpty()).collect(Collectors.toUnmodifiableSet()));
+                        .map(String::trim).filter(s -> !s.isEmpty()).collect(Collectors.toUnmodifiableSet()),
+                get(p, "discord.member-role-id", ""),
+                get(p, "discord.visitor-role-id", ""),
+                get(p, "discord.night-desk-role-id", ""),
+                get(p, "discord.rules-channel-id", ""),
+                get(p, "discord.desk-channel-id", ""));
     }
 
     private static String get(Properties p, String key, String fallback) {

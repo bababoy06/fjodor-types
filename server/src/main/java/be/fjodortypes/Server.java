@@ -33,7 +33,7 @@ import java.util.concurrent.Executors;
  *   POST /api/preview         {text} -> {script}: how the pauses will fall
  *   POST /api/submit          {text, signature, own, website, opened} -> {ok}
  * either
- *   POST /discord/interactions   the review buttons
+ *   POST /discord/interactions   every Discord button: review, rules, Night Desk
  * </pre>
  */
 public final class Server {
@@ -43,14 +43,22 @@ public final class Server {
 
     private final Config config;
     private final Store store;
-    private final Review review;
-    private final ExecutorService background = Executors.newSingleThreadExecutor();
+    private final Review review;            // posts new submissions; null without a review channel
+    private final Interactions interactions; // all Discord buttons; null without a bot token and public key
+    private final ExecutorService background = Executors.newFixedThreadPool(4);
     private final Map<String, Deque<Long>> recent = new ConcurrentHashMap<>();
 
     public Server(Config config, Store store) {
         this.config = config;
         this.store = store;
-        this.review = config.reviewEnabled() ? new Review(config, store) : null;
+        if (config.botEnabled()) {
+            Discord discord = new Discord(config);
+            this.review = config.reviewEnabled() ? new Review(config, store, discord) : null;
+            this.interactions = new Interactions(config, review, new Community(config, discord, background));
+        } else {
+            this.review = null;
+            this.interactions = null;
+        }
     }
 
     public void start() throws IOException {
@@ -211,8 +219,8 @@ public final class Server {
     // ------------------------------------------------------------------ Discord
 
     private void interactions(HttpExchange ex) throws IOException {
-        if (review == null) {
-            send(ex, 404, "text/plain", "Review is off.");
+        if (interactions == null) {
+            send(ex, 404, "text/plain", "The bot is off.");
             return;
         }
         byte[] body = read(ex);
@@ -220,7 +228,7 @@ public final class Server {
             send(ex, 413, "text/plain", "Too big.");
             return;
         }
-        String answer = review.handle(body, ex.getRequestHeaders().getFirst("X-Signature-Ed25519"),
+        String answer = interactions.handle(body, ex.getRequestHeaders().getFirst("X-Signature-Ed25519"),
                 ex.getRequestHeaders().getFirst("X-Signature-Timestamp"));
         if (answer == null) {
             send(ex, 401, "text/plain", "Bad signature.");
