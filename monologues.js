@@ -213,6 +213,42 @@ Don't tell me. Just go there for a second. The floor. The light. That particular
 ~
 I'll ask the real one next time.[p:700] If I'm braver.`},
 
+{id:'archive-letter',text:`I found a letter today, among all the other letters in the archives. Let me tell you how it goes, because this one is special.
+Don't ask me where it came from. Or where you should go after reading it.
+Just[p:800]... listen.
+~
+> My dearest,
+> I'm writing this at the kitchen table while you're out buying the bread you always forget. I have maybe twenty minutes before I hear your key in the door.
+~
+> I know you've noticed. The way I hold the railing on the stairs now. The way I say I'm only tired, and you pretend to believe me, because we have always been kind to each other like that.
+~
+> I saw the doctor again on Tuesday. I didn't tell you. I'm sorry. I wanted one more ordinary week. You complaining about the neighbour's dog. You burning the onions again.
+> It isn't going to get better. I've known for a while.
+~
+> I've been angry. You've seen it. The slammed cupboards. The way I snapped at you over nothing at your sister's birthday.
+> It wasn't nothing, and it wasn't you. It was this. I was shouting at the wrong thing, because the right thing doesn't listen.
+~
+> Please don't keep the version of me from these last months. Keep the one who danced badly in the hallway. The one who stole your coat every winter and swore it was hers.
+~
+> When it's over, the house will be very quiet. Let it be quiet for a while.
+> And then[p:600] — I mean this — open the windows. Play the loud records. Let someone else sit in my chair, one day. A chair is only a chair.
+~
+> I'm not afraid of being forgotten. I'm afraid of being the reason you stop living.
+~
+> I hear the key.
+> I'll put this inside the blue book on the top shelf, the one you've been promising to read for eleven years. So I suppose that's where you'll find it. When you finally do.
+~
+> I love you. I always did, even on the bad days.
+> Especially on the bad days.
+~
+[p:1800]That's where it ends.
+~
+I don't know if anyone ever found it. Maybe the blue book is still up there, closed, with the dust settling on it the way dust does.
+~
+I keep thinking about those twenty minutes. How much you can fit into twenty minutes, when you know they're the last ones that are only yours.
+~
+I'll put it back now. With the others.`},
+
 {id:'night',hours:[22,5],text:`It's {clock}. You should be asleep, you know it, and here you are, being spoken to by a stranger who isn't even a stranger, because a stranger would at least have a face.
 ~
 I like this hour. The furniture stops pretending. Have you noticed? In the daytime a chair is a chair. At this hour it's a shape that's waiting for something.
