@@ -32,7 +32,7 @@ public final class Interactions {
         }
         Map<?, ?> data = in.get("data") instanceof Map<?, ?> d ? d : Map.of();
         String customId = String.valueOf(data.get("custom_id"));
-        if (Community.handles(customId)) {
+        if (Community.handles(type, data, customId)) {
             return community.handle(in, type, data, customId);
         }
         if (review != null) {

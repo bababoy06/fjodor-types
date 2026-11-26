@@ -43,8 +43,9 @@ public final class Server {
 
     private final Config config;
     private final Store store;
-    private final Review review;            // posts new submissions; null without a review channel
+    private final Review review;            // posts new submissions once a review channel is chosen
     private final Interactions interactions; // all Discord buttons; null without a bot token and public key
+    private final Community community;
     private final ExecutorService background = Executors.newFixedThreadPool(4);
     private final Map<String, Deque<Long>> recent = new ConcurrentHashMap<>();
 
@@ -53,10 +54,18 @@ public final class Server {
         this.store = store;
         if (config.botEnabled()) {
             Discord discord = new Discord(config);
-            this.review = config.reviewEnabled() ? new Review(config, store, discord) : null;
-            this.interactions = new Interactions(config, review, new Community(config, discord, background));
+            Doors doors;
+            try {
+                doors = new Doors(config);
+            } catch (IOException e) {
+                throw new IllegalStateException("Couldn't read discord.json: " + e.getMessage(), e);
+            }
+            this.review = new Review(config, store, discord, doors);
+            this.community = new Community(discord, doors, background);
+            this.interactions = new Interactions(config, review, community);
         } else {
             this.review = null;
+            this.community = null;
             this.interactions = null;
         }
     }
@@ -68,10 +77,20 @@ public final class Server {
         http.start();
         System.out.println("fjodor-types listening on " + config.bind() + ":" + config.port()
                 + " for " + config.siteHost() + " and " + config.dropHost()
-                + (review == null ? " (Discord review is off: fill in the discord.* settings)" : ""));
-        if (review != null) {
-            for (Submission s : store.unannounced()) {
-                background.submit(() -> review.announce(s));
+                + (interactions == null ? " (the Discord bot is off: fill in discord.bot-token and discord.public-key)" : ""));
+        if (interactions != null) {
+            background.submit(community::registerCommands);
+            if (config.gateway()) {
+                new Gateway(config.botToken(), (event, data) -> {
+                    if (event.equals("GUILD_MEMBER_ADD")) {
+                        community.memberJoined(data);
+                    }
+                }).start();
+            }
+            if (review.ready()) {
+                for (Submission s : store.unannounced()) {
+                    background.submit(() -> review.announce(s));
+                }
             }
         }
     }
@@ -180,7 +199,7 @@ public final class Server {
         }
         Submission s = store.add(text, script, signature);
         System.out.println("New submission " + s.id + " (" + text.length() + " characters)");
-        if (review != null) {
+        if (review != null && review.ready()) {
             background.submit(() -> review.announce(s));
         }
         send(ex, 200, "application/json", Json.write(Json.obj("ok", true)));

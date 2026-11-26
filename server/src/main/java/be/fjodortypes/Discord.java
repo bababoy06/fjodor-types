@@ -23,8 +23,20 @@ public final class Discord {
         return call(method, path, body, null);
     }
 
-    /** @param reason shown in the server's audit log (role changes, closed tickets) */
+    /** For the few answers that are a list (roles, channels). */
+    public Object callList(String method, String path) throws IOException {
+        String body = send(method, path, null, null);
+        return body.isBlank() ? java.util.List.of() : Json.parse(body);
+    }
+
+    /** @param reason shown in the server's audit log (role changes, closed letters) */
     public Map<String, Object> call(String method, String path, Object body, String reason) throws IOException {
+        String answer = send(method, path, body, reason);
+        return answer.isBlank() ? Map.of() : Json.parseObject(answer);
+    }
+
+    /** Waits and tries again (up to 3 times) when Discord says "slow down". */
+    private String send(String method, String path, Object body, String reason) throws IOException {
         HttpRequest.Builder req = HttpRequest.newBuilder(URI.create("https://discord.com/api/v10" + path))
                 .header("Authorization", "Bot " + config.botToken())
                 .header("User-Agent", "DiscordBot (https://" + config.siteHost() + ", 1)")
@@ -39,12 +51,24 @@ public final class Discord {
                     .method(method, HttpRequest.BodyPublishers.ofString(Json.write(body)));
         }
         try {
-            HttpResponse<String> r = http.send(req.build(), HttpResponse.BodyHandlers.ofString());
-            if (r.statusCode() / 100 != 2) {
-                throw new IOException("Discord answered " + r.statusCode() + " to " + method + " " + path + ": "
-                        + r.body().substring(0, Math.min(300, r.body().length())));
+            for (int attempt = 0; ; attempt++) {
+                HttpResponse<String> r = http.send(req.build(), HttpResponse.BodyHandlers.ofString());
+                if (r.statusCode() == 429 && attempt < 3) {
+                    double wait = 1;
+                    try {
+                        wait = ((Number) Json.parseObject(r.body()).getOrDefault("retry_after", 1)).doubleValue();
+                    } catch (RuntimeException ignored) {
+                        // keep the default
+                    }
+                    Thread.sleep((long) (Math.min(wait, 30) * 1000) + 100);
+                    continue;
+                }
+                if (r.statusCode() / 100 != 2) {
+                    throw new IOException("Discord answered " + r.statusCode() + " to " + method + " " + path + ": "
+                            + r.body().substring(0, Math.min(300, r.body().length())));
+                }
+                return r.body();
             }
-            return r.body().isBlank() ? Map.of() : Json.parseObject(r.body());
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new IOException("Interrupted", e);

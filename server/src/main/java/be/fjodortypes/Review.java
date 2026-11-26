@@ -16,17 +16,24 @@ public final class Review {
     private final Config config;
     private final Store store;
     private final Discord discord;
+    private final Doors doors;
 
-    public Review(Config config, Store store, Discord discord) {
+    public Review(Config config, Store store, Discord discord, Doors doors) {
         this.config = config;
         this.store = store;
         this.discord = discord;
+        this.doors = doors;
+    }
+
+    /** Posting happens once a review channel is chosen (/setup or config.properties). */
+    public boolean ready() {
+        return !doors.reviewChannel().isBlank();
     }
 
     /** Posts a new submission for review. Runs in the background; a failure only costs the Discord message. */
     public void announce(Submission s) {
         try {
-            Map<String, Object> msg = discord.call("POST", "/channels/" + config.reviewChannelId() + "/messages",
+            Map<String, Object> msg = discord.call("POST", "/channels/" + doors.reviewChannel() + "/messages",
                     Json.obj("content", "A new monologue was left in the archive.",
                             "embeds", List.of(embed(s)), "components", buttons(s)));
             synchronized (store) {
