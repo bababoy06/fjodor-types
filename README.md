@@ -37,8 +37,8 @@ Give every new monologue its own `id` — visitors' browsers remember which ids 
 2. **Pauses:** the server turns the text into the script format (`server/.../Pauses.java`). Each paragraph
    break becomes `~` and each sentence its own line; lines the writer broke by hand stay as they are; `...` and
    long dashes get a short `[p:]`. Writers can use the script syntax themselves; pauses are capped at 6 seconds.
-3. **Review:** each submission is posted in your Discord review channel with **Approve**, **Edit pauses** and
-   **Reject**. *Edit pauses* opens the script in a Discord form. Only the IDs in `discord.reviewer-ids` can press
+3. **Review:** each submission is posted in your Discord review channel (chosen with `/setup`) with **Approve**,
+   **Edit pauses** and **Reject**. *Edit pauses* opens the script in a Discord form. Only the IDs in `discord.reviewer-ids` can press
    them. A submission that couldn't be posted (Discord down) is posted again when the service restarts.
 4. **Live:** approved pieces are served at `fjodor-types.com/community.js`, in the same shape as
    `monologues.js`, with ids `drop-<id>`. Visitors' browsers treat them as unheard.
@@ -100,56 +100,62 @@ sudo nginx -t && sudo systemctl reload nginx
 sudo certbot --nginx -d fjodor-types.com -d www.fjodor-types.com -d drop.fjodor-types.com
 ```
 
-### 4. The review bot
+### 4. The Discord bot
+
+One bot does everything: the review channel, the rules check and the Night Desk.
 
 1. [discord.com/developers/applications](https://discord.com/developers/applications) → **New Application**
    (e.g. *The Archivist*).
 2. **General Information:** copy the **Public Key** (= `discord.public-key`).
-3. **Bot:** **Reset Token** and copy it (= `discord.bot-token`). No privileged intents needed.
-4. **Invite it** to your server: OAuth2 → URL Generator, scope `bot`, permissions **Manage Roles**,
-   **View Channels**, **Send Messages**, **Embed Links**, **Create Private Threads**, **Send Messages in Threads**
-   and **Manage Threads**. Open the link.
-5. Make a private review channel, copy its ID (= `discord.review-channel-id`), and your own user ID
-   (= `discord.reviewer-ids`).
-6. Fill them in: `sudo nano /opt/fjodor/config.properties`, then `sudo systemctl restart fjodor`.
-7. Back in **General Information**, set the **Interactions Endpoint URL** to
+3. **Bot:** **Reset Token** and copy it (= `discord.bot-token`). Turn on **Server Members Intent**: it lets the
+   bot see people join, to give them the visitor role.
+4. **Invite it** to your server: OAuth2 → URL Generator, scopes `bot` and `applications.commands`, permissions
+   **Manage Roles**, **Manage Channels**, **View Channels**, **Send Messages**, **Embed Links**,
+   **Read Message History**, **Create Private Threads**, **Send Messages in Threads** and **Manage Threads**.
+   Open the link.
+5. Fill in the token, the public key and your user ID (`discord.reviewer-ids`):
+   `sudo nano /opt/fjodor/config.properties`, then `sudo systemctl restart fjodor`.
+6. Back in **General Information**, set the **Interactions Endpoint URL** to
    `https://drop.fjodor-types.com/discord/interactions` (Discord checks it right away, so the site has to be running).
 
-### 5. The community server: rules check and the Night Desk
+### 5. `/setup`: choose the channels and roles
 
-The same bot also runs two doors on your Discord server, only with buttons, so it never needs to stay connected:
+Make the channels and roles you want first (for example `#rules`, `#the-night-desk`, `#archive-review`, and the
+roles *Those Who Stayed*, *The Night Desk*, optionally *Visitor*). Then, in Discord, as someone with
+**Manage Server**:
 
-- **The rules check.** `@everyone` can only see `#rules`. Under the rules is an **I've read the rules** button that
-  gives the member role (*Those Who Stayed*), which opens every public channel. Optionally it also takes away a
-  visitor role, if you give new members one.
-- **The Night Desk.** In `#the-night-desk` a **Write to the Night Desk** button opens a small form (subject and
-  letter). Each letter becomes a **private thread** in that channel: only the writer and *The Night Desk* role can
-  see it. One open letter per person. The writer or the Night Desk closes it with **Close this letter**, which
-  archives and locks the thread.
+```
+/setup rules:#rules night_desk:#the-night-desk member_role:@Those Who Stayed night_desk_role:@The Night Desk
+       visitor_role:@Visitor review_channel:#archive-review
+```
 
-**Roles** (Server Settings → Roles). Keep the bot's own role **above** *Those Who Stayed* and the visitor role, or
-it can't hand them out.
-
-| Role | Permissions |
+| Option | What it's for |
 |---|---|
-| `@everyone` | View Channels **off** everywhere except `#rules` (read only) |
-| Those Who Stayed | View Channels on the public channels and `#the-night-desk` |
-| The Night Desk | Manage Threads in `#the-night-desk` (to see and close every letter); mark it **mentionable**, so it's pulled into new letters |
-| the bot | Manage Roles; in `#rules` and `#the-night-desk`: View Channel, Send Messages, Embed Links, Create Private Threads, Send Messages in Threads, Manage Threads |
+| `rules` | The verify button goes here. Everyone can read it; nobody can write in it. |
+| `night_desk` | The Night Desk button goes here. Letters become private threads in this channel. |
+| `member_role` | Given by the verify button. Opens the public channels. |
+| `night_desk_role` | Sees every letter and can close them. Also sees the review channel. |
+| `visitor_role` *(optional)* | Given the moment someone joins, taken away when they verify. |
+| `review_channel` *(optional)* | Where new drop submissions are posted with Approve / Edit / Reject. |
+| `fix_permissions` *(default yes)* | Sets the permissions on these channels for you (see below). |
+| `hide_other_channels` *(default no)* | Every other channel `@everyone` can see now becomes visible only to the member role and the Night Desk. |
 
-**`#the-night-desk` for Those Who Stayed:** View Channel and Read Message History **on**, Send Messages **off**,
-Create Public Threads and Create Private Threads **off**, Send Messages in Threads **on**. They can then only
-write inside their own letter.
+The bot remembers your choices (`/opt/fjodor/discord.json`), sets the permissions, posts the two buttons
+(replacing old ones if you run `/setup` again), and tells you what it did and what it couldn't. Run it again
+any time to change something.
 
-**Turning it on:**
+**What `fix_permissions` sets:**
+- **rules:** `@everyone` can read, can't send, react or start threads.
+- **Night Desk channel:** hidden from `@everyone`. The member role can see it but only write *inside* their own
+  letter. The Night Desk role sees and manages every letter. The Night Desk role is made mentionable, so it's
+  pulled into each new letter.
+- **review channel:** hidden from everyone except the Night Desk role.
 
-1. Copy the role and channel IDs into the `discord.*` settings in `/opt/fjodor/config.properties`
-   (see `config.example.properties`) and `sudo systemctl restart fjodor`.
-2. Post the two buttons, once:
-   ```bash
-   sudo -u fjodor java -jar /opt/fjodor/fjodor.jar panels /opt/fjodor/config.properties
-   ```
-   Write the rules themselves above the button in `#rules` before you do.
+**One thing to do by hand:** drag the bot's own role **above** the member and visitor roles (Server Settings →
+Roles). Discord only lets a bot hand out roles below its own. `/setup` warns you if it's in the wrong place.
+
+**The visitor role** needs the always-on connection (`discord.gateway=on`, the default) and the Server
+Members Intent. Without a visitor role, `@everyone` is simply the "unverified" state.
 
 ### 6. Updating
 
@@ -162,8 +168,10 @@ Pulls as the `fjodor` user, then builds and restarts. Changes to the texts (`ind
 
 ### 7. Backups
 
-Everything visitors sent is in `/opt/fjodor/submissions.json`. Add it to the nightly backup:
+Everything visitors sent is in `/opt/fjodor/submissions.json`, and your `/setup` choices in
+`/opt/fjodor/discord.json`. Add them to the nightly backup:
 
 ```bash
 sudo cp /opt/fjodor/submissions.json /home/<you>/backups/fjodor-submissions-$(date +%F).json
+sudo cp /opt/fjodor/discord.json /home/<you>/backups/fjodor-discord-$(date +%F).json
 ```
