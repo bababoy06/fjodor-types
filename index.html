@@ -122,9 +122,25 @@ document.addEventListener('visibilitychange',()=>{
 
 /* ---- choose something not heard before ---- */
 const rand=n=>{try{return crypto.getRandomValues(new Uint32Array(1))[0]%n}catch(e){return Math.floor(Math.random()*n)}};
+/* ---- hidden monologues: only under strange conditions, and only once ---- */
+const hidden=M.filter(m=>m.hidden);
+const found=()=>store.get('voice.found',[]);
+function unlocked(m){
+  const c=m.hidden,now=new Date();
+  if(c.visit)return visits>=c.visit;
+  if(c.time){const[hh,mm]=c.time.split(':').map(Number),mins=now.getHours()*60+now.getMinutes(),at=hh*60+mm;return mins>=at&&mins<=at+1}
+  if(c.away)return lastVisit>0&&Date.now()-lastVisit>c.away*864e5;
+  return false; // silence ones are found by waiting, after the ending
+}
+function markFound(m){
+  const f=found();if(!f.includes(m.id))store.set('voice.found',[...f,m.id]);
+  showCite('you found one of the hidden ones \u00b7 '+found().length+' of '+hidden.length);
+}
 function pick(){
+  const secret=hidden.find(m=>!found().includes(m.id)&&unlocked(m));
+  if(secret)return secret;
   const h=hour();
-  const pool=M.filter(m=>!m.when||m.when(h));
+  const pool=M.filter(m=>!m.hidden&&(!m.when||m.when(h)));
   let seen=store.get('voice.seen',[]);
   let fresh=pool.filter(m=>!seen.includes(m.id));
   if(!fresh.length){seen=seen.slice(-1);fresh=pool.filter(m=>!seen.includes(m.id))}
@@ -152,13 +168,34 @@ function greeting(){
   const m=pick();
   await run(m.text);
   running=false;
-  if(m.cite){await sleep(1200);showCite(m.cite)}
-  await sleep(m.cite?7000:4200);
+  if(m.hidden){await sleep(1200);markFound(m);await sleep(7000)}
+  else if(m.cite){await sleep(1200);showCite(m.cite);await sleep(7000)}
+  else await sleep(4200);
   await clear();
   await sleep(1200);
   await typeLine('Come back later.');
   await typeLine("I'll have something else to say.");
+  waitInSilence();
 })();
+
+/* ---- after the goodbye: whoever stays, untouched, long enough, hears one more ---- */
+function waitInSilence(){
+  const secret=hidden.find(m=>m.hidden.silence&&!found().includes(m.id));
+  if(!secret)return;
+  let still=0,tick;
+  const reset=()=>{still=0};
+  ['keydown','pointerdown','wheel','touchstart'].forEach(e=>addEventListener(e,reset,{passive:true}));
+  document.addEventListener('visibilitychange',reset);
+  tick=setInterval(async()=>{
+    if(document.hidden)return;
+    if(++still<secret.hidden.silence)return;
+    clearInterval(tick);
+    await clear();await sleep(1500);
+    out.replaceChildren();p=null;
+    running=true;await run(secret.text);running=false;
+    await sleep(1200);markFound(secret);
+  },1000);
+}
 }
 </script>
 </body>
