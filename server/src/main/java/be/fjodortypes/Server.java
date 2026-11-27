@@ -46,6 +46,7 @@ public final class Server {
     private final Review review;            // posts new submissions once a review channel is chosen
     private final Interactions interactions; // all Discord buttons; null without a bot token and public key
     private final Community community;
+    private final Broadcast broadcast;      // the nightly 3:00 monologue in Discord
     private final ExecutorService background = Executors.newFixedThreadPool(4);
     private final Map<String, Deque<Long>> recent = new ConcurrentHashMap<>();
 
@@ -63,7 +64,10 @@ public final class Server {
             this.review = new Review(config, store, discord, doors);
             this.community = new Community(discord, doors, background);
             this.interactions = new Interactions(config, review, community);
+            this.broadcast = new Broadcast(config, discord, doors, store);
+            community.setBroadcast(broadcast);
         } else {
+            this.broadcast = null;
             this.review = null;
             this.community = null;
             this.interactions = null;
@@ -80,6 +84,7 @@ public final class Server {
                 + (interactions == null ? " (the Discord bot is off: fill in discord.bot-token and discord.public-key)" : ""));
         if (interactions != null) {
             background.submit(community::registerCommands);
+            broadcast.start();
             if (config.gateway()) {
                 new Gateway(config.botToken(), (event, data) -> {
                     if (event.equals("GUILD_MEMBER_ADD")) {

@@ -26,11 +26,13 @@ import java.util.stream.Collectors;
  * @param nightDeskRoleId sees and answers the tickets
  * @param deskChannelId   the Night Desk channel; tickets are private threads inside it
  * @param gateway         keep an always-on connection to Discord (needed to give the visitor role on join)
+ * @param broadcastTime   when the nightly broadcast is typed (default 03:00), in broadcastZone (default Europe/Brussels)
  */
 public record Config(String bind, int port, String siteHost, String dropHost, Path siteDir, Path dataFile,
                      String botToken, String publicKey, String reviewChannelId, Set<String> reviewerIds,
                      String memberRoleId, String visitorRoleId, String nightDeskRoleId,
-                     String rulesChannelId, String deskChannelId, boolean gateway) {
+                     String rulesChannelId, String deskChannelId, boolean gateway,
+                     String broadcastChannelId, java.time.LocalTime broadcastTime, java.time.ZoneId broadcastZone) {
 
     /** The bot answers buttons once it has a token and the public key. */
     public boolean botEnabled() {
@@ -65,7 +67,10 @@ public record Config(String bind, int port, String siteHost, String dropHost, Pa
                 get(p, "discord.night-desk-role-id", ""),
                 get(p, "discord.rules-channel-id", ""),
                 get(p, "discord.desk-channel-id", ""),
-                !get(p, "discord.gateway", "on").equalsIgnoreCase("off"));
+                !get(p, "discord.gateway", "on").equalsIgnoreCase("off"),
+                get(p, "discord.broadcast-channel-id", ""),
+                Broadcast.parseTime(get(p, "broadcast.time", "03:00")),
+                Broadcast.parseZone(get(p, "broadcast.timezone", "Europe/Brussels")));
     }
 
     private static String get(Properties p, String key, String fallback) {

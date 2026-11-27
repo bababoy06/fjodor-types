@@ -12,6 +12,8 @@ import java.util.Map;
 
 /** Talks to Discord's REST API as the bot. One instance is shared by the review and the community parts. */
 public final class Discord {
+    /** Discord's API. The system property is only for tests against a fake Discord. */
+    private static final String API = System.getProperty("fjodor.discord-api", "https://discord.com/api/v10");
     private final Config config;
     private final HttpClient http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
 
@@ -37,7 +39,7 @@ public final class Discord {
 
     /** Waits and tries again (up to 3 times) when Discord says "slow down". */
     private String send(String method, String path, Object body, String reason) throws IOException {
-        HttpRequest.Builder req = HttpRequest.newBuilder(URI.create("https://discord.com/api/v10" + path))
+        HttpRequest.Builder req = HttpRequest.newBuilder(URI.create(API + path))
                 .header("Authorization", "Bot " + config.botToken())
                 .header("User-Agent", "DiscordBot (https://" + config.siteHost() + ", 1)")
                 .timeout(Duration.ofSeconds(15));
