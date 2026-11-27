@@ -98,7 +98,7 @@ public final class Broadcast {
 
     // ------------------------------------------------------------------ choosing
 
-    /** Everything that may be said at this hour: the repo's monologues and the approved drops. */
+    /** Everything that may be said at this hour (or at any hour, with -1): the repo's monologues and the approved drops. */
     List<Piece> pool(int hour) {
         List<Piece> pieces = new ArrayList<>();
         try {
@@ -111,7 +111,7 @@ public final class Broadcast {
                     continue;
                 }
                 Matcher h = HOURS.matcher(fields);
-                if (h.find()) {
+                if (hour >= 0 && h.find()) {
                     int from = Integer.parseInt(h.group(1)), to = Integer.parseInt(h.group(2));
                     boolean in = from < to ? hour >= from && hour < to : hour >= from || hour < to;
                     if (!in) {

@@ -73,6 +73,7 @@ public final class Community {
                             option(8, "visitor_role", "Given when someone joins, taken away once they've read the rules.", false, null),
                             option(7, "review_channel", "Where new drop submissions are posted for review.", false, List.of(0)),
                             option(7, "broadcast_channel", "Where a monologue is typed live every night at 3:00.", false, List.of(0)),
+                            option(7, "archive_channel", "The door to the archive goes here. Inside, everyone walks alone.", false, List.of(0)),
                             option(5, "fix_permissions", "Set the permissions on these channels for you. Default: yes.", false, null),
                             option(5, "hide_other_channels", "Hide every other channel until people have read the rules. Default: no.", false, null))),
                     Json.obj(
@@ -106,7 +107,8 @@ public final class Community {
         String guild = String.valueOf(in.get("guild_id"));
         String rules = str(opts, "rules"), desk = str(opts, "night_desk"), member = str(opts, "member_role"),
                 nightDesk = str(opts, "night_desk_role"), visitor = str(opts, "visitor_role"),
-                review = str(opts, "review_channel"), broadcastChannel = str(opts, "broadcast_channel");
+                review = str(opts, "review_channel"), broadcastChannel = str(opts, "broadcast_channel"),
+                archiveChannel = str(opts, "archive_channel");
         boolean fix = !Boolean.FALSE.equals(opts.get("fix_permissions"));
         boolean hideOthers = Boolean.TRUE.equals(opts.get("hide_other_channels"));
 
@@ -126,7 +128,7 @@ public final class Community {
                 for (String[] kv : new String[][]{{Doors.RULES_CHANNEL, rules}, {Doors.DESK_CHANNEL, desk},
                         {Doors.MEMBER_ROLE, member}, {Doors.NIGHT_DESK_ROLE, nightDesk},
                         {Doors.VISITOR_ROLE, visitor}, {Doors.REVIEW_CHANNEL, review},
-                        {Doors.BROADCAST_CHANNEL, broadcastChannel}}) {
+                        {Doors.BROADCAST_CHANNEL, broadcastChannel}, {Doors.ARCHIVE_CHANNEL, archiveChannel}}) {
                     if (doors.fixedInConfig(kv[0])) {
                         warnings.add("`" + kv[0] + "` is set in config.properties, so that value is used instead.");
                     }
@@ -141,6 +143,11 @@ public final class Community {
                     if (!broadcastChannel.isEmpty()
                             && overwrite(broadcastChannel, botId, 1, VIEW | SEND | HISTORY, 0, warnings)) {
                         done.add("<#" + broadcastChannel + ">: a monologue is typed here every night at 3:00.");
+                    }
+                    if (!archiveChannel.isEmpty()
+                            && overwrite(archiveChannel, member, 0, VIEW | HISTORY, SEND | PUBLIC_THREADS | PRIVATE_THREADS, warnings)
+                            && overwrite(archiveChannel, botId, 1, VIEW | SEND | EMBED | HISTORY, 0, warnings)) {
+                        done.add("<#" + archiveChannel + ">: only the door. Members can enter, not write in the channel.");
                     }
                 }
                 if (hideOthers) {
@@ -279,6 +286,7 @@ public final class Community {
                 "components", List.of(Json.obj("type", 1, "components", List.of(Json.obj(
                         "type", 2, "style", 2, "label", "Write to the Night Desk", "custom_id", "desk:open"))))),
                 "the Night Desk button", done, warnings);
+        panel(Doors.ARCHIVE_CHANNEL, Doors.ARCHIVE_PANEL, Archive.panel(), "the archive door", done, warnings);
     }
 
     private void panel(String channelKey, String panelKey, Map<String, Object> message, String what,

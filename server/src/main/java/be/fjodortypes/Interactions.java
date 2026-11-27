@@ -13,11 +13,13 @@ public final class Interactions {
     private final Signature signature;
     private final Review review;        // null when the review channel isn't set
     private final Community community;
+    private final Archive archive;
 
-    public Interactions(Config config, Review review, Community community) {
+    public Interactions(Config config, Review review, Community community, Archive archive) {
         this.signature = new Signature(config.publicKey());
         this.review = review;
         this.community = community;
+        this.archive = archive;
     }
 
     /** @return the JSON answer for Discord, or null when the signature is wrong (answer 401 then) */
@@ -32,6 +34,9 @@ public final class Interactions {
         }
         Map<?, ?> data = in.get("data") instanceof Map<?, ?> d ? d : Map.of();
         String customId = String.valueOf(data.get("custom_id"));
+        if (Archive.handles(customId)) {
+            return archive.handle(in, type, data, customId);
+        }
         if (Community.handles(type, data, customId)) {
             return community.handle(in, type, data, customId);
         }

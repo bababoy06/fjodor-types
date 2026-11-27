@@ -16,6 +16,7 @@ public final class Doors {
     public static final String MEMBER_ROLE = "memberRole", VISITOR_ROLE = "visitorRole", NIGHT_DESK_ROLE = "nightDeskRole",
             RULES_CHANNEL = "rulesChannel", DESK_CHANNEL = "deskChannel", REVIEW_CHANNEL = "reviewChannel",
             BROADCAST_CHANNEL = "broadcastChannel", BROADCAST_RECENT = "broadcastRecent",
+            ARCHIVE_CHANNEL = "archiveChannel", ARCHIVE_PANEL = "archivePanel",
             RULES_PANEL = "rulesPanel", DESK_PANEL = "deskPanel";
 
     private final Path file;

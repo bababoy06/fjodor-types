@@ -63,9 +63,16 @@ public final class Server {
             }
             this.review = new Review(config, store, discord, doors);
             this.community = new Community(discord, doors, background);
-            this.interactions = new Interactions(config, review, community);
             this.broadcast = new Broadcast(config, discord, doors, store);
             community.setBroadcast(broadcast);
+            ArchiveStore archiveStore;
+            try {
+                archiveStore = new ArchiveStore(config.dataFile().toAbsolutePath().resolveSibling("archive.json"));
+            } catch (IOException e) {
+                throw new IllegalStateException("Couldn't read archive.json: " + e.getMessage(), e);
+            }
+            this.interactions = new Interactions(config, review, community,
+                    new Archive(config, discord, doors, broadcast, archiveStore, background));
         } else {
             this.broadcast = null;
             this.review = null;
