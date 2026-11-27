@@ -25,6 +25,12 @@ All the text lives in `monologues.js` — you never need to touch `index.html` t
 | `{visitline}` | changes with the visit count |
 | `{device}` | different line for phone vs. computer |
 | `hours: [22, 5]` | only play between those hours (wraps past midnight) |
+| `hidden: { visit: 10 }` | a hidden one: plays once, on the 10th visit |
+| `hidden: { time: '03:33' }` | plays once, during that minute on the visitor's clock |
+| `hidden: { away: 30 }` | plays once, when someone returns after 30+ days |
+| `hidden: { silence: 240 }` | plays once, after the goodbye, if they stay 4 minutes without touching anything |
+
+Hidden ones never come up normally. After one plays, the page shows *"you found one of the hidden ones · 2 of 4"*.
 
 Give every new monologue its own `id` — visitors' browsers remember which ids they've already heard.
 

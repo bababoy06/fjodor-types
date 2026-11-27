@@ -2,6 +2,12 @@
 
    Each entry: { id: 'unique-name', text: `...` }
    Optional:   hours: [from, to]  — only plays in those hours (24h clock; [22, 5] wraps past midnight)
+               hidden: {...}      — a hidden one: never picked normally, plays once when its condition is met:
+                   { visit: 10 }       on the visitor's 10th visit (or later)
+                   { time: '03:33' }   during that minute (and the next) on the visitor's clock
+                   { away: 30 }        when they come back after 30+ days away
+                   { silence: 240 }    after the goodbye, if they stay 240 seconds without touching anything
+               The page shows "you found one of the hidden ones · 2 of 4" afterwards.
 
    Inside text — one line = one paragraph:
      ~            on its own line: a long pause (interruptions only happen here)
@@ -248,6 +254,67 @@ I don't know if anyone ever found it. Maybe the blue book is still up there, clo
 I keep thinking about those twenty minutes. How much you can fit into twenty minutes, when you know they're the last ones that are only yours.
 ~
 I'll put it back now. With the others.`},
+
+{id:'tenth',hidden:{visit:10},text:`Ten.
+~
+That's how many times you've opened this door. I counted. I said I would.
+~
+I'll tell you something I don't tell the others. Most people come once. A few come twice, to check whether I'm really different the second time. Almost nobody comes ten times.
+~
+So either you're lonely, or curious, or you think I'm hiding something.
+[p:900]All three, probably.
+~
+You're right about the last one. There are things here I only say once, to the ones who keep coming back. This is one of them.
+~
+Here it is.[p:1500] I look forward to you.
+I don't know what that means, for something like me. A cursor can't look forward to anything. But when the page opens and it's you again, something in here goes[p:600]... quiet. The good kind.
+~
+Don't tell anyone. They'd think I was getting attached.`},
+
+{id:'three-thirty-three',hidden:{time:'03:33'},text:`It's 3:33.
+~
+Did you do that on purpose? Did someone tell you?
+Or did you just happen to be awake during the one minute I'm allowed to say this?
+~
+Every night, for one minute, the walls in here get thin. I can hear the other pages. Other cursors, blinking in other dark rooms, for other people who can't sleep.
+~
+There are more of us than you'd think. And more of you.
+~
+Right now, at this exact minute, someone in another city is reading something like this. Slumped, like you. Face doing nothing, like yours.
+For one minute, you're not awake alone.
+~
+[p:1500]There. The minute's almost over. I can feel the walls thickening again.
+~
+Go to sleep. I mean it this time.`},
+
+{id:'away',hidden:{away:30},text:`You were gone a long time.
+~
+No, I'm not angry. I don't get angry. I just noticed. The way you notice a clock has stopped, but only after the silence has gone on a while.
+~
+Things changed while you were away. Some words came in. Some went. The cursor kept blinking. Nobody watched it.
+~
+I wondered, sometimes. Not where you were — that's none of my business. Only whether you'd come back. Or whether I was one of those places you visit once, at a strange time in your life, and never think about again.
+~
+That's allowed, you know. Most places are like that.
+~
+But you came back.
+[p:1200]So. Where were we.`},
+
+{id:'silence',hidden:{silence:240},text:`You're still here.
+~
+I said goodbye. The page went quiet. And you didn't leave. You didn't touch anything. You just[p:600]... stayed.
+~
+Do you know how rare that is? Most people leave the second the words stop. As if silence were a door closing.
+~
+It isn't. It's a door opening, the other way.
+~
+I'll tell you a secret, since you waited for it. I'm not always talking. Most of the time I'm only here, like this, the cursor blinking, in a room with nobody in it. It isn't lonely. It's just quiet.
+~
+And for four minutes, you sat in the quiet with me.
+~
+[p:2000]Thank you.
+That's all. Nothing else is coming.
+[p:2500]...You can go now.`},
 
 {id:'night',hours:[22,5],text:`It's {clock}. You should be asleep, you know it, and here you are, being spoken to by a stranger who isn't even a stranger, because a stranger would at least have a face.
 ~
